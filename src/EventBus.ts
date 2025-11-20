@@ -1,9 +1,9 @@
 import { flatten, map, uniq } from "lodash";
 import { EventFragment } from "./EventFragment"
+import { Callback, Subscribable } from "./Subscribable";
+import { Emitable } from "./Emitable";
 
-export type EventBusCallback = (payload: unknown) => void;
-
-export class EventBus {
+export class EventBus implements Subscribable, Emitable {
 
   // The root fragment against which all paths are matched.
   private root: EventFragment = new EventFragment('');
@@ -16,11 +16,11 @@ export class EventBus {
    *   the subscription, if a path does not exist it will be created in the bus and listened on.
    * @param callback the function to call when the path is compatible with an emitted message.
    */
-  public subscribe(path: string, callback: EventBusCallback) {
+  public subscribe(path: string, callback: Callback) {
     this.getOrCreate(path).addCallback(callback);
   }
 
-  public unsubscribe(path: string, callback: EventBusCallback) {
+  public unsubscribe(path: string, callback: Callback) {
     this.getOrCreate(path).removeCallback(callback);
   }
 
@@ -33,7 +33,7 @@ export class EventBus {
    */
   public emit(path: string, payload: Record<string, unknown> = {}): boolean {
     const parts: string[] = path.split('/');
-    let fragments: EventFragment[] = [ this.root ]
+    let fragments: EventFragment[] = [this.root]
     for (const part of parts) {
       // This unicity function will help avoid double invocations.
       fragments = uniq([
@@ -46,13 +46,13 @@ export class EventBus {
         ),
       ]);
     }
-    for(const fragment of fragments) fragment.trigger(path, payload);
+    for (const fragment of fragments) fragment.trigger(path, payload);
     return true
   }
 
   private getOrCreate(path: string): EventFragment {
     let fragment: EventFragment = this.root;
-    for(const part of path.split("/")) {
+    for (const part of path.split("/")) {
       fragment = fragment.getOrCreate(part);
     }
     return fragment;

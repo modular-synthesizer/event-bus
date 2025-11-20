@@ -1,10 +1,10 @@
 import { filter, find } from "lodash"
-import type { EventBusCallback } from "./EventBus";
+import { Callback } from "./Subscribable";
 
 export class EventFragment {
   private _content: string;
   private _children: EventFragment[] = [];
-  private callbacks: EventBusCallback[] = [];
+  private callbacks: Callback[] = [];
   private _parent?: EventFragment;
 
   public constructor(content: string, _parent?: EventFragment) {
@@ -26,11 +26,11 @@ export class EventFragment {
     return fragment;
   }
 
-  public addCallback(callback: EventBusCallback) {
+  public addCallback(callback: Callback) {
     if (!this.callbacks.includes(callback)) this.callbacks.push(callback);
   }
 
-  public removeCallback(callback: EventBusCallback) {
+  public removeCallback(callback: Callback) {
     this.callbacks = this.callbacks.filter(c => c !== callback);
   }
 
@@ -41,7 +41,7 @@ export class EventFragment {
   }
 
   public trigger(_path: string, payload: Record<string, unknown>) {
-    for(const callback of this.callbacks) callback(payload);
+    for (const callback of this.callbacks) callback(payload);
   }
 
   public remove(fragment: string) {
